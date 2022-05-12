@@ -407,6 +407,46 @@
           "name": "Checkbox"
         }
       },
+      "formsNew": {
+        "name": "FormsNew",
+        "description": "",
+        "selected": "Selected",
+        "type": "Form type",
+        "getValue": "Get form value",
+        "text-field": {
+          "name": "Text field",
+          "value": "Value",
+          "clearValue": "Clear form value",
+          "delay": {
+            "placeholder": "Delay",
+            "label": "Typing delay (millisecond)(0 to disable)"
+          }
+        },
+        "select": {
+          "name": "Select"
+        },
+        "time": {
+          "name": "Time"
+        },
+        "date": {
+          "name": "Date"
+        },
+        "number": {
+          "name": "Number"
+        },
+        "long-text": {
+          "name": "Long Text"
+        },
+        "short-text": {
+          "name": "Short Text"
+        },    
+        "checkbox": {
+          "name": "Checkbox"
+        },
+        "readOnly": "Read Only",
+        "saveAs": "Save As",
+        "prefill": "Prefill Value",
+      },
       "repeat-task": {
         "name": "Repeat task",
         "description": "",

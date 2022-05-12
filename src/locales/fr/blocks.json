@@ -325,6 +325,31 @@
           "name": "Case à cocher"
         }
       },
+      "formsNew": {
+        "name": "NouveauxFormulaires",
+        "description": "",
+        "selected": "Selectionné",
+        "type": "Type de formulaire",
+        "getValue": "Obtenir la valeur du formulaire",
+        "text-field": {
+          "name": "Champ de texte",
+          "value": "Valeur",
+          "clearValue": "Effacer la valeur du formulaire",
+          "delay": {
+            "placeholder": "Délai",
+            "label": "Délai de frappe (milliseconde) (0 pour désactiver)"
+          }
+        },
+        "select": {
+          "name": "Sélection"
+        },
+        "radio": {
+          "name": "Radio"
+        },
+        "checkbox": {
+          "name": "Case à cocher"
+        }
+      },
       "repeat-task": {
         "name": "Répéter la tâche",
         "description": "",
