@@ -37,9 +37,11 @@
 import { shallowReactive } from 'vue';
 import { tasks } from '@/utils/shared';
 import EditForms from '@/components/newtab/workflow/edit/EditForms.vue';
+import EditFormsNew from '@/components/newtab/workflow/edit/EditFormsNew.vue';
 import EditTriggerEvent from '@/components/newtab/workflow/edit/EditTriggerEvent.vue';
 import EditScrollElement from '@/components/newtab/workflow/edit/EditScrollElement.vue';
 import handleForms from '@/content/blocksHandler/handlerForms';
+import handleFormsNew from '@/content/blocksHandler/handlerFormsNew';
 import handleGetText from '@/content/blocksHandler/handlerGetText';
 import handleEventClick from '@/content/blocksHandler/handlerEventClick';
 import handelTriggerEvent from '@/content/blocksHandler/handlerTriggerEvent';
@@ -62,6 +64,11 @@ const blocks = {
     ...tasks.forms,
     component: EditForms,
     handler: handleForms,
+  },
+  formsNew: {
+    ...tasks.formsNew,
+    component: EditFormsNew,
+    handler: handleFormsNew,
   },
   'get-text': {
     ...tasks['get-text'],
