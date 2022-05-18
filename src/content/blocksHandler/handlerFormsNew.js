@@ -1,8 +1,21 @@
 import handleFormElementNew from '@/utils/handleFormElementNew';
+import { useDialog } from '@/composable/dialog';
 import handleSelector, { markElement } from '../handleSelector';
 
 async function formsNew(block) {
+  alert('ok');
   const { data } = block;
+  const dialog = useDialog();
+
+  alert('lol');
+  console.log('okok');
+
+  dialog.confirm({
+    title: 'attention',
+    okVariant: 'danger',
+    body: 'ok',
+    onConfirm: () => {},
+  });
   const elements = await handleSelector(block, { returnElement: true });
 
   if (!elements) {

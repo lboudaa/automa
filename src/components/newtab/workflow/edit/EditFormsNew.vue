@@ -47,6 +47,7 @@
         v-if="
           data.type === 'short-text' ||
           data.type === 'long-text' ||
+          data.type === 'text-field' ||
           data.type === 'select'
         "
       >
@@ -66,6 +67,16 @@
           {{ t('workflow.blocks.formsNew.text-field.clearValue') }}
         </ui-checkbox>
       </template>
+      <ui-input
+        v-if="data.type === 'text-field'"
+        :model-value="data.delay"
+        :label="t('workflow.blocks.forms.text-field.delay.label')"
+        :placeholder="t('workflow.blocks.forms.text-field.delay.placeholder')"
+        class="w-full mt-1"
+        min="0"
+        type="number"
+        @change="updateData({ delay: +$event })"
+      />
       <ui-input
         v-if="data.type === 'number'"
         :model-value="data.value"
@@ -127,6 +138,7 @@ const emit = defineEmits(['update:data']);
 const { t } = useI18n();
 
 const forms = [
+  'text-field',
   'short-text',
   'long-text',
   'number',
