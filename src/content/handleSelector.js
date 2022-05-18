@@ -1,5 +1,5 @@
 import FindElement from '@/utils/FindElement';
-import { scrollIfNeeded } from '@/utils/helper';
+import { visibleInViewport } from '@/utils/helper';
 
 /* eslint-disable consistent-return */
 
@@ -7,6 +7,16 @@ export function markElement(el, { id, data }) {
   if (data.markEl) {
     el.setAttribute(`block--${id}`, '');
   }
+}
+
+export function getDocumentCtx(frameSelector) {
+  let documentCtx = document;
+
+  if (frameSelector) {
+    documentCtx = document.querySelector(frameSelector)?.contentDocument;
+  }
+
+  return documentCtx;
 }
 
 export function queryElements(data, documentCtx = document) {
@@ -40,16 +50,6 @@ export function queryElements(data, documentCtx = document) {
   });
 }
 
-export function getDocumentCtx(frameSelector) {
-  let documentCtx = document;
-
-  if (frameSelector) {
-    documentCtx = document.querySelector(frameSelector)?.contentDocument;
-  }
-
-  return documentCtx;
-}
-
 export default async function (
   { data, id, frameSelector, debugMode },
   { onSelected, onError, onSuccess }
@@ -77,19 +77,20 @@ export default async function (
       return null;
     }
 
-    if (data.multiple) {
-      await Promise.allSettled(
-        Array.from(elements).map((el) => {
-          markElement(el, { id, data });
-          if (debugMode) scrollIfNeeded(el);
-          return onSelected(el);
-        })
-      );
-    } else if (elements) {
-      markElement(elements, { id, data });
-      if (debugMode) scrollIfNeeded(elements);
-      await onSelected(elements);
-    }
+    const elementsArr = data.multiple ? Array.from(elements) : [elements];
+
+    await Promise.allSettled(
+      elementsArr.map(async (el) => {
+        markElement(el, { id, data });
+
+        if (debugMode) {
+          const isInViewport = visibleInViewport(el);
+          if (!isInViewport) el.scrollIntoView();
+        }
+
+        if (onSelected) await onSelected(el);
+      })
+    );
 
     if (onSuccess) onSuccess();
 
@@ -97,6 +98,4 @@ export default async function (
   } catch (error) {
     console.error(error);
   }
-
-  return elements;
 }

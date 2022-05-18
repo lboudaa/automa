@@ -2,6 +2,7 @@ import { finder } from '@medv/finder';
 import { nanoid } from 'nanoid';
 import browser from 'webextension-polyfill';
 import { debounce } from '@/utils/helper';
+import { recordPressedKey } from '@/utils/recordKeys';
 import addBlock from './addBlock';
 
 const isAutomaInstance = (target) =>
@@ -9,6 +10,13 @@ const isAutomaInstance = (target) =>
   document.body.hasAttribute('automa-selecting');
 const textFieldEl = (el) =>
   ['INPUT', 'TEXTAREA'].includes(el.tagName) || el.isContentEditable;
+
+function findSelector(element) {
+  return finder(element, {
+    tagName: () => true,
+    attr: (name, value) => name === 'id' || (name.startsWith('aria') && value),
+  });
+}
 
 function changeListener({ target }) {
   if (isAutomaInstance(target)) return;
@@ -20,7 +28,7 @@ function changeListener({ target }) {
   if (execludeInput) return;
 
   let block = null;
-  const selector = finder(target);
+  const selector = findSelector(target);
   const isSelectEl = target.tagName === 'SELECT';
   const elementName = target.ariaLabel || target.name;
 
@@ -74,59 +82,74 @@ function changeListener({ target }) {
       recording.flows.pop();
     }
 
+    if (
+      block.data.type === 'text-field' &&
+      block.data.selector === lastFlow?.data?.selector
+    )
+      return;
+
     recording.flows.push(block);
   });
 }
-function keyEventListener({
-  target,
-  code,
-  key,
-  keyCode,
-  altKey,
-  ctrlKey,
-  metaKey,
-  shiftKey,
-  type,
-  repeat,
-}) {
-  if (isAutomaInstance(target)) return;
+async function keyEventListener(event) {
+  if (isAutomaInstance(event.target) || event.repeat) return;
 
-  const isTextField = textFieldEl(target);
-  if (isTextField) return;
+  const isTextField = textFieldEl(event.target);
+  const enterKey = event.key === 'Enter';
+  let isSubmitting = false;
 
-  const selector = finder(target);
+  if (isTextField) {
+    const inputInForm = event.target.form && event.target.tagName === 'INPUT';
 
-  addBlock((recording) => {
-    const lastFlow = recording.flows.at(-1);
-    const block = {
-      id: 'trigger-event',
-      data: {
-        selector,
-        eventName: type,
-        eventType: 'keyboard-event',
-        eventParams: {
-          key,
-          code,
-          repeat,
-          altKey,
-          ctrlKey,
-          metaKey,
-          keyCode,
-          shiftKey,
+    if (enterKey && inputInForm) {
+      event.preventDefault();
+
+      await addBlock({
+        id: 'forms',
+        data: {
+          delay: 100,
+          clearValue: true,
+          type: 'text-field',
+          waitForSelector: true,
+          value: event.target.value,
+          selector: findSelector(event.target),
         },
-        description: `${type}: ${key === ' ' ? 'Space' : key}`,
-      },
-    };
+      });
 
-    if (lastFlow.id === 'trigger-event') {
-      if (!lastFlow.groupId) lastFlow.groupId = nanoid();
-
-      block.groupId = lastFlow.groupId;
+      isSubmitting = true;
+    } else {
+      return;
     }
+  }
 
-    recording.flows.push(block);
+  recordPressedKey(event, (keysArr) => {
+    const selector = isTextField && enterKey ? findSelector(event.target) : '';
+    const keys = keysArr.join('+');
 
-    return recording;
+    addBlock((recording) => {
+      const block = {
+        id: 'press-key',
+        description: `Press: ${keys}`,
+        data: {
+          keys,
+          selector,
+        },
+      };
+
+      const lastFlow = recording.flows.at(-1);
+      if (lastFlow.id === 'press-key') {
+        if (!lastFlow.groupId) lastFlow.groupId = nanoid();
+        block.groupId = lastFlow.groupId;
+      }
+
+      recording.flows.push(block);
+
+      if (isSubmitting) {
+        setTimeout(() => {
+          event.target.form.submit();
+        }, 500);
+      }
+    });
   });
 }
 function clickListener(event) {
@@ -134,14 +157,14 @@ function clickListener(event) {
 
   if (isAutomaInstance(target)) return;
 
-  let isClickLink = true;
   const isTextField =
     (target.tagName === 'INPUT' && target.getAttribute('type') === 'text') ||
     ['SELECT', 'TEXTAREA'].includes(target.tagName);
 
   if (isTextField) return;
 
-  const selector = finder(target);
+  let isClickLink = false;
+  const selector = findSelector(target);
 
   if (target.tagName === 'A') {
     if (event.ctrlKey || event.metaKey) return;
@@ -191,7 +214,7 @@ const scrollListener = debounce(({ target }) => {
 
   const isDocument = target === document;
   const element = isDocument ? document.documentElement : target;
-  const selector = isDocument ? 'html' : finder(target);
+  const selector = isDocument ? 'html' : findSelector(target);
 
   addBlock((recording) => {
     const lastFlow = recording.flows[recording.flows.length - 1];
@@ -221,7 +244,6 @@ export function cleanUp() {
   document.removeEventListener('click', clickListener, true);
   document.removeEventListener('change', changeListener, true);
   document.removeEventListener('scroll', scrollListener, true);
-  document.removeEventListener('keyup', keyEventListener, true);
   document.removeEventListener('keydown', keyEventListener, true);
 }
 
@@ -232,7 +254,6 @@ export default async function () {
     document.addEventListener('click', clickListener, true);
     document.addEventListener('scroll', scrollListener, true);
     document.addEventListener('change', changeListener, true);
-    document.addEventListener('keyup', keyEventListener, true);
     document.addEventListener('keydown', keyEventListener, true);
   }
 

@@ -13,6 +13,7 @@
         "title": "Blocks",
         "moveToGroup": "Move block to blocks group",
         "selector": "Element selector",
+        "selectorOptions": "Selector options",
         "timeout": "Timeout (milliseconds)",
         "toggle": {
           "enable": "Enable block",
@@ -91,6 +92,13 @@
       "reload-tab": {
         "name": "Reload tab",
         "description": "Reload the active tab"
+      },
+      "press-key": {
+        "name": "Press key",
+        "description": "Press a key or a combination",
+        "target": "Target element (optional)",
+        "key": "Key",
+        "detect": "Detect key"
       },
       "save-assets": {
         "name": "Save assets",
@@ -216,6 +224,7 @@
         "keysAsFirstRow": "Use keys as the first row",
         "insertData": "Insert data",
         "valueInputOption": "Value input option",
+        "insertDataOption": "Insert data option",
         "rangeToSearch": "Range to start the search",
         "dataFrom": {
           "label": "Data from",
@@ -239,7 +248,8 @@
         "select": {
           "get": "Get spreadsheet cell values",
           "getRange": "Get spreadsheet range",
-          "update": "Update spreadsheet cell values"
+          "update": "Update spreadsheet cell values",
+          "append": "Append spreadsheet cell values"
         }
       },
       "active-tab": {
@@ -359,6 +369,7 @@
         "customUserAgent": "Use custom User-Agent",
         "activeTab": "Set as active tab",
         "tabToGroup": "Add tab to group",
+        "waitTabLoaded": "Wait till tab loaded",
         "updatePrevTab": {
           "title": "Use the previously opened new tab instead of creating a new one",
           "text": "Update previously opened tab"
@@ -478,6 +489,7 @@
       "conditions": {
         "name": "Conditions",
         "add": "Add condition",
+        "retryConditions": "Retry if all conditions are not met",
         "description": "Conditional block",
         "refresh": "Refresh conditions connections",
         "fallbackTitle": "Execute when all comparisons don't meet the requirement",
