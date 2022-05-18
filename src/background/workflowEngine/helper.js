@@ -19,8 +19,26 @@ export function attachDebugger(tabId, prevTab) {
 
 export function waitTabLoaded(tabId, ms = 10000) {
   return new Promise((resolve, reject) => {
-    const isResolved = false;
-    const timeout = setTimeout(resolve, ms);
+    const timeout = null;
+    let isResolved = false;
+    const onErrorOccurred = (details) => {
+      if (details.tabId !== tabId || details.error.includes('ERR_ABORTED'))
+        return;
+
+      isResolved = true;
+      browser.webNavigation.onErrorOccurred.removeListener(onErrorOccurred);
+      reject(new Error(details.error));
+    };
+
+    if (ms > 0) {
+      setTimeout(() => {
+        isResolved = true;
+        browser.webNavigation.onErrorOccurred.removeListener(onErrorOccurred);
+        reject(new Error('Timeout'));
+      }, ms);
+    }
+
+    browser.webNavigation.onErrorOccurred.addListener(onErrorOccurred);
 
     const activeTabStatus = () => {
       if (isResolved) return;
@@ -34,12 +52,13 @@ export function waitTabLoaded(tabId, ms = 10000) {
         if (tab.status === 'loading') {
           setTimeout(() => {
             activeTabStatus();
-          }, 500);
+          }, 1000);
           return;
         }
 
         clearTimeout(timeout);
 
+        browser.webNavigation.onErrorOccurred.removeListener(onErrorOccurred);
         resolve();
       });
     };

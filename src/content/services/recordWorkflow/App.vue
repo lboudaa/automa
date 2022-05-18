@@ -146,7 +146,7 @@
               >
                 <option value="" selected>Select column [none]</option>
                 <option
-                  v-for="column in selectState.workflowColumns"
+                  v-for="column in addBlockState.workflowColumns"
                   :key="column.id"
                   :value="column.id"
                 >
@@ -182,18 +182,20 @@
       hoveredElements: selectState.hoveredElements,
       selectedElements: selectState.selectedElements,
     }"
+    style="z-index: 9999999"
     @update="selectState[$event.key] = $event.items"
   />
   <teleport to="body">
     <div
       v-if="selectState.status === 'selecting'"
       style="
-        z-index: 9999999;
+        z-index: 999999;
         position: fixed;
         left: 0;
         top: 0;
         width: 100%;
         height: 100%;
+        background-color: rgba(0, 0, 0, 0.3);
       "
     ></div>
   </teleport>
@@ -274,16 +276,19 @@ function addFlowItem() {
     data: {
       saveData,
       assignVariable,
-      column: addBlockState.column,
+      waitForSelector: true,
+      dataColumn: addBlockState.column,
       variableName: addBlockState.varName,
       selector: selectState.list
-        ? addBlockState.listSelector
+        ? selectState.listSelector
         : selectState.childSelector,
     },
   };
 
-  if (selectState.isInList) {
-    block.data.selector = `{{loopData@${selectState.listId}}} ${selectState.childSelector}`;
+  if (selectState.isInList || selectState.listId) {
+    const childSelector = selectState.isInList ? selectState.childSelector : '';
+
+    block.data.selector = `{{loopData@${selectState.listId}}} ${childSelector}`;
   } else if (selectState.list) {
     block.data.multiple = true;
   }
@@ -325,7 +330,7 @@ function selectElementPath(type) {
     : finder(element);
 }
 function clearSelectState() {
-  if (selectState.list) {
+  if (selectState.list && selectState.listId) {
     addBlock({
       id: 'loop-breakpoint',
       description: selectState.listId,
@@ -338,6 +343,7 @@ function clearSelectState() {
   selectState.listId = '';
   selectState.list = false;
   selectState.status = 'idle';
+  selectState.isSelecting = false;
   selectState.hoveredElements = [];
   selectState.selectedElements = [];
 
@@ -419,6 +425,7 @@ function onKeyup({ key }) {
 }
 function startSelecting(list = false) {
   selectState.list = list;
+  selectState.isSelecting = true;
   selectState.status = 'selecting';
 
   document.body.setAttribute('automa-selecting', '');
@@ -432,6 +439,8 @@ function onMousemove({ clientX, clientY, target: eventTarget }) {
 
     return;
   }
+
+  if (!selectState.isSelecting) return;
 
   const elementSelected = selectState.selectedElements.length > 0;
   const disable = selectState.list && !selectState.listId && elementSelected;
@@ -469,6 +478,8 @@ function getElementPath(el, root = document.documentElement) {
   return path;
 }
 function onClick(event) {
+  if (!selectState.isSelecting) return;
+
   const { target: eventTarget, clientY, clientX } = event;
 
   if (eventTarget.id === 'automa-recording') return;
@@ -578,7 +589,7 @@ onMounted(() => {
     .then(({ recording, workflows }) => {
       const workflow = workflows.find(({ id }) => recording.workflowId === id);
 
-      addBlockState.workflowColumns = workflow.table || [];
+      addBlockState.workflowColumns = workflow?.table || [];
     });
 });
 onBeforeUnmount(detachListeners);
